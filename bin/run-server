@@ -24,9 +24,9 @@ $httpd->reg_cb (
   </head>
   <body>
     <center>
-        <h1>Pixel Game</h1>
-        Choose your color:<br />
-        <div id="gameboard"></div>
+        <h1>Word Game</h1>
+        Choose your word, I only want one!<br />
+        <input type="text" id="my_word" length="12" />
     </center>
   </body>
 </html>
@@ -48,7 +48,7 @@ EOT
     <link rel="stylesheet" type="text/css" href="/static/game.css" />
   </head>
   <body>
-    <h1 class="big">Connect to $ip:$port</h1>
+    <h1 class="big">Word Game!  Connect to $ip:$port</h1>
     <div id="game_canvas">
         $body
     </div>
@@ -68,11 +68,12 @@ EOT
       my ($httpd, $req) = @_;
       $httpd->stop_request;
 
-      my $pixel = $req->parm('pixel');
+      my $word = $req->parm('word');
+      $word =~ s/^(\w+).+/$1/;
       my $client_id = $req->parm('id');
-      if ($client_id and $pixel) {
+      if ($client_id and $word) {
           my $new_host = exists $host_state{$client_id} ? 0 : 1;
-          $host_state{$client_id} = $pixel eq 'on' ? 1 : 0;
+          $host_state{$client_id} = $word;
           make_host_list() if $new_host;
       }
       $req->respond({ content => ['text/html', 'Thanks' ]});
@@ -124,13 +125,7 @@ sub calc_square {
     }
 
     sub make_host_list {
-        my $side = calc_square();
-        my $min = $side * $side;
-
-        @host_order = keys %host_state;
-        push @host_order, undef while @host_order < $min;
-
-        @host_order = shuffle @host_order;
+        @host_order = shuffle keys %host_state;
     }
 }
 
@@ -139,28 +134,17 @@ sub game_state_to_html {
     use Data::Dumper;
     warn Dumper \%host_state;
 
-    my $body = '<table class="pixels">';
-    my $side = calc_square();
     my @hosts = get_host_order();
 
     if (@hosts == 0) {
         return 'Nobody connected yet!';
     }
 
-    for my $x (1 .. $side) {
-        $body .= '<tr>';
-        for my $y (1 .. $side) {
-            my $host = shift @hosts;
-            my $class = 'yellow';
-            if ($host) {
-                $class = $host_state{ $host } ? 'white' : 'black';
-            }
-            $body .= qq{<td class="$class"></td>};
-        }
-        $body .= "</tr>";
+    my @words;
+    for my $host (@hosts) {
+        push @words, $host_state{$host};
     }
-    $body .= "</table>";
-    return $body;
+    return join ' ', @words;
 }
 
 sub find_my_ip {
