@@ -4,6 +4,7 @@ use warnings;
 use IO::All;
 use AnyEvent::HTTPD;
 use Algorithm::Numerical::Shuffle qw/shuffle/;
+use Data::Dumper;
 
 my $ip = find_my_ip();
 my $port = 9090;
@@ -26,7 +27,11 @@ $httpd->reg_cb (
     <center>
         <h1>Word Game</h1>
         Choose your word, I only want one!<br />
-        <input type="text" id="my_word" length="12" />
+        <form action="/game/update">
+        <input type="text" id="my_word" length="12" name="word"/>
+        <br />
+        <input type="submit" value="submit" onSubmit="send_word(); return false" />
+        </form>
     </center>
   </body>
 </html>
@@ -68,10 +73,10 @@ EOT
       my ($httpd, $req) = @_;
       $httpd->stop_request;
 
-      my $word = $req->parm('word');
-      $word =~ s/^(\w+).+/$1/;
-      my $client_id = $req->parm('id');
+      my $word = $req->parm('word') || '';
+      my $client_id = $req->parm('id') || '';
       if ($client_id and $word) {
+          $word =~ s/\s.+//;
           my $new_host = exists $host_state{$client_id} ? 0 : 1;
           $host_state{$client_id} = $word;
           make_host_list() if $new_host;
@@ -131,8 +136,7 @@ sub calc_square {
 
 
 sub game_state_to_html {
-    use Data::Dumper;
-    warn Dumper \%host_state;
+#    warn Dumper \%host_state;
 
     my @hosts = get_host_order();
 

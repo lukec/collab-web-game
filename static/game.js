@@ -1,10 +1,13 @@
 $(document).ready(function() {
-    var my_id = Math.random();
+    document.my_id = Math.random();
 
     $("#my_word").keypress( function(e) {
+        setTimeout( function () { send_word() }, 1);
+    });
+    function send_word () {
         var my_word = $("#my_word").attr('value');
         console.log(my_word);
-        jQuery.get('/game/update', { word: my_word, id: my_id});
-    });
+        jQuery.get('/game/update', { word: my_word, id: document.my_id});
+    };
 });
 
