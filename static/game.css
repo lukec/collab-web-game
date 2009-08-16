@@ -1,0 +1,35 @@
+#gameboard {
+    border: 3px black solid;
+    height: 400px;
+    width: 400px;
+}
+
+.pixels {
+    border: 2px black solid;
+}
+
+.pixels td {
+    height: 80px;
+    width: 80px;
+    border: 1px;
+}
+
+.black {
+    background: black;
+}
+.white {
+    background: white;
+}
+.yellow {
+    background: yellow;
+}
+
+.big {
+    font-size: 240%;
+}
+
+#game_canvas {
+      margin-left: auto ;
+        margin-right: auto ;
+
+}
