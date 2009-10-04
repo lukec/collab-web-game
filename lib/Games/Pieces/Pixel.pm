@@ -1,14 +1,8 @@
 package Games::Pieces::Pixel;
 use Moose;
-use Games::Pieces::State;
-use Algorithm::Numerical::Shuffle qw/shuffle/;
 use namespace::clean -except => 'meta';
 
-with 'Games::Pieces::Game';
-
-has 'port' => (is => 'ro', isa => 'Int', required => 1);
-has 'host' => (is => 'ro', isa => 'Str', required => 1);
-has 'state' => (is => 'ro', isa => 'Games::Pieces::State', lazy_build => 1);
+extends 'Games::Pieces::Base';
 
 has 'hosts' => (is => 'rw', isa => 'ArrayRef[Str]', default => sub { [] });
 
@@ -51,27 +45,6 @@ sub to_html {
     return $body;
 }
 
-sub handle_update {
-    my $self = shift;
-    my $req_params = shift;
-
-    my $pixel = $req_params->{pixel};
-    my $client_id = $req_params->{id};
-    if ($client_id and defined $pixel) {
-        my $new_host = $self->state->host_exists($client_id) ? 0 : 1;
-        my $new_value = $pixel eq 'on' ? 1 : 0;
-        print STDERR $new_value;
-        $self->state->update_host(
-            $client_id => (
-                pixel => $new_value,
-            ),
-        );
-
-        # Shuffle the board everytime someone new joins
-        $self->shuffle_host_list() if $new_host;
-    }
-}
-
 sub canvas_size {
     my $self = shift;
     my $num = $self->state->client_count;
@@ -83,24 +56,17 @@ sub canvas_size {
     return $i;
 }
 
-sub shuffle_host_list {
+sub host_list_size {
     my $self = shift;
-    my $side = $self->canvas_size;
-    my $min = $side * $side;
-
-    my @host_order = @{ $self->state->clients };
-    push @host_order, '' while @host_order < $min;
-
-    @host_order = shuffle @host_order;
-    $self->hosts(\@host_order);
+    return $self->canvas_size ^ 2;
 }
 
-sub player_js_uri { '/static/game.js' }
-sub player_css_uri { '/static/game.css' }
-sub admin_js_uri { '/static/game-show.js' }
-sub admin_css_uri { '/static/game.css' }
-
-sub _build_state { Games::Pieces::State->new }
+sub _validate_update {
+    my $self = shift;
+    my ($key, $value) = @_;
+    return undef unless $key eq 'pixel';
+    return $value eq 'on' ? 1 : 0;
+}
 
 __PACKAGE__->meta->make_immutable;
 1;
