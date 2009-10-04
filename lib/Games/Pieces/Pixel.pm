@@ -4,7 +4,7 @@ use namespace::clean -except => 'meta';
 
 extends 'Games::Pieces::Base';
 
-has 'hosts' => (is => 'rw', isa => 'ArrayRef[Str]', default => sub { [] });
+sub player_js_uri { '/static/pixel-player.js' }
 
 sub player_html {
     my $self = shift;

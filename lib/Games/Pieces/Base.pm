@@ -9,10 +9,16 @@ with 'Games::Pieces::Game';
 has 'port' => (is => 'ro', isa => 'Int', required => 1);
 has 'host' => (is => 'ro', isa => 'Str', required => 1);
 has 'state' => (is => 'ro', isa => 'Games::Pieces::State', lazy_build => 1);
+has 'hosts' => (is => 'rw', isa => 'ArrayRef[Str]', default => sub { [] });
 
-sub player_js_uri { '/static/game.js' }
+sub player_js_uri { 
+    my $self = shift;
+    (my $class = ref($self)) =~ s/.+::(.+)/lc($1)/e;
+    return "/static/$class-player.js";
+}
+
 sub player_css_uri { '/static/game.css' }
-sub admin_js_uri { '/static/game-show.js' }
+sub admin_js_uri { '/static/game-admin.js' }
 sub admin_css_uri { '/static/game.css' }
 
 sub host_list_size {
