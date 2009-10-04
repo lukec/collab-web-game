@@ -41,6 +41,8 @@ sub update_host {
         %new_opts
     };
     $self->_state->{ $host } = $new_opts;
+
+#    use Data::Dumper; warn Dumper $self->_state;
 }
 
 __PACKAGE__->meta->make_immutable;

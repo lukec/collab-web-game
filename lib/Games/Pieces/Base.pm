@@ -33,7 +33,6 @@ sub handle_update {
     my $req_params = shift;
     my $client_id = delete $req_params->{id};
 
-    my $pixel = $req_params->{pixel};
     if ($client_id) {
         my $new_host = $self->state->host_exists($client_id) ? 0 : 1;
 
@@ -45,7 +44,7 @@ sub handle_update {
             print STDERR $new_value;
             $self->state->update_host(
                 $client_id => (
-                    pixel => $new_value,
+                    $key => $new_value,
                 ),
             );
         }
@@ -58,10 +57,9 @@ sub handle_update {
 sub shuffle_host_list {
     my $self = shift;
     my $side = $self->host_list_size;
-    my $min = $side * $side;
 
     my @host_order = @{ $self->state->clients };
-    push @host_order, '' while @host_order < $min;
+    push @host_order, '' while @host_order < $side;
 
     @host_order = shuffle @host_order;
     $self->hosts(\@host_order);
