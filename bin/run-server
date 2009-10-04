@@ -1,185 +1,46 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
 use Getopt::Long;
-use AnyEvent::HTTPD;
-use Algorithm::Numerical::Shuffle qw/shuffle/;
+use Games::Pieces::Factory;
 
 my $ip = find_my_ip() || 'localhost';
 my $port = 9090;
 my $debug = 0;
-my %host_state;
+my $game_name = 'pixel';
 
 GetOptions(
     'ip=s' => \$ip,
     'port=i' => \$port,
     'd|debug' => \$debug,
+    'game=s' => \$game_name,
 ) or die <<EOT;
 USAGE: $0 <options>
 
 Where <options> are:
+  --game=blah - name of the game to play
   --ip=blah
   --port=blah
   --debug
 EOT
 
-my $httpd = AnyEvent::HTTPD->new (port => $port);
-$httpd->reg_cb (
-   '/' => sub {
-      my ($httpd, $req) = @_;
-      $httpd->stop_request;
-
-      my $content = <<'EOT';
-<html>
-  <head>
-    <script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>          
-    <script type="text/javascript" src="/static/game.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/game.css" />
-  </head>
-  <body>
-    <center>
-        <h1>Pixel Game</h1>
-        Choose your color:<br />
-        <div id="gameboard"></div>
-    </center>
-  </body>
-</html>
-EOT
-      $req->respond({ content => ['text/html', $content ]});
-   },
-   '/show' => sub {
-      my ($httpd, $req) = @_;
-      $httpd->stop_request;
-
-      my $body = game_state_to_html();
-
-      my $content = <<EOT;
-<html>
-  <head>
-    <script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>          
-    <script type="text/javascript" src="/static/game.js"></script>
-    <script type="text/javascript" src="/static/game-show.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/game.css" />
-  </head>
-  <body>
-    <h1 class="big">Connect to $ip:$port</h1>
-    <div id="game_canvas">
-        $body
-    </div>
-  </body>
-</html>
-EOT
-      $req->respond({ content => ['text/html', $content ]});
-   },
-   '/show/fragment' => sub {
-      my ($httpd, $req) = @_;
-      $httpd->stop_request;
-
-      my $body = game_state_to_html();
-      $req->respond({ content => ['text/html', $body ]});
-   },
-   '/game/update' => sub {
-      my ($httpd, $req) = @_;
-      $httpd->stop_request;
-
-      my $pixel = $req->parm('pixel');
-      my $client_id = $req->parm('id');
-      warn "update - $client_id - $pixel\n" if $debug;
-      if ($client_id and $pixel) {
-          my $new_host = exists $host_state{$client_id} ? 0 : 1;
-          my $new_value = $pixel eq 'on' ? 1 : 0;
-          print STDERR $new_value;
-          $host_state{$client_id} = $new_value;
-          make_host_list() if $new_host;
-      }
-      $req->respond({ content => ['text/html', 'Thanks' ]});
-   },
-   '/static' => sub { _serve_static(@_) },
-   '' => sub {
-       my ($httpd, $req) = @_;
-       my $url = $req->url;
-       warn "Unknown path!! $url" unless $url =~ m/favicon\.ico/;
-       return $req->respond([404, 'Not Found', {}, '']);
-   },
+my %game_opts = (
+    port => $port,
+    host => $ip,
 );
+my $game = Games::Pieces::Factory->new(
+    game_name => $game_name, 
+    game_opts => \%game_opts,
+)->game;
+
 
 print "Starting up on http://$ip:$port\n";
-$httpd->run;
+$game->run;
 exit;
 
 
-sub _serve_static {
-    my ($httpd, $req, $file) = @_;
-    $httpd->stop_request;
-
-    my $url = $req->url;
-    $url =~ s#.+/(.+)#$1#;
-    my $filename = "static/$url";
-    die "Can't find $filename!" unless -e $filename;
-    open(my $fh, $filename) or $req->respond (
-        [404, 'not found', { 'Content-Type' => 'text/plain' }, 'not found']
-    );
-
-    my $content = do { local $/; <$fh> };
-    $req->respond({ content => ['text/javascript', $content ]});
-}
-
-sub calc_square {
-    my $num = keys %host_state;
-    my $i = 0;
-    while($i*$i < $num) {
-        $i++;
-    }
-    return 2 if $i == 1; # special case
-    return $i;
-}
-
-{
-    my @host_order;
-
-    sub get_host_order {
-        return @host_order;
-    }
-
-    sub make_host_list {
-        my $side = calc_square();
-        my $min = $side * $side;
-
-        @host_order = keys %host_state;
-        push @host_order, undef while @host_order < $min;
-
-        @host_order = shuffle @host_order;
-    }
-}
-
-
-sub game_state_to_html {
-    use Data::Dumper;
-    warn Dumper \%host_state;
-
-    my $body = '<table class="pixels">';
-    my $side = calc_square();
-    my @hosts = get_host_order();
-
-    if (@hosts == 0) {
-        return 'Nobody connected yet!';
-    }
-
-    for my $x (1 .. $side) {
-        $body .= '<tr>';
-        for my $y (1 .. $side) {
-            my $host = shift @hosts;
-            my $class = 'yellow';
-            if ($host) {
-                $class = $host_state{ $host } ? 'white' : 'black';
-            }
-            $body .= qq{<td class="$class"></td>};
-        }
-        $body .= "</tr>";
-    }
-    $body .= "</table>";
-    return $body;
-}
 
 sub find_my_ip {
     my $ip = qx(ifconfig|grep 'inet ' | grep -v 127.0.0.1| grep -v 192.168. | awk '{print \$2}');
