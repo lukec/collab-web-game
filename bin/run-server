@@ -1,12 +1,27 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use strict;
 use warnings;
+use Getopt::Long;
 use AnyEvent::HTTPD;
 use Algorithm::Numerical::Shuffle qw/shuffle/;
 
-my $ip = find_my_ip();
+my $ip = find_my_ip() || 'localhost';
 my $port = 9090;
+my $debug = 0;
 my %host_state;
+
+GetOptions(
+    'ip=s' => \$ip,
+    'port=i' => \$port,
+    'd|debug' => \$debug,
+) or die <<EOT;
+USAGE: $0 <options>
+
+Where <options> are:
+  --ip=blah
+  --port=blah
+  --debug
+EOT
 
 my $httpd = AnyEvent::HTTPD->new (port => $port);
 $httpd->reg_cb (
@@ -69,9 +84,12 @@ EOT
 
       my $pixel = $req->parm('pixel');
       my $client_id = $req->parm('id');
+      warn "update - $client_id - $pixel\n" if $debug;
       if ($client_id and $pixel) {
           my $new_host = exists $host_state{$client_id} ? 0 : 1;
-          $host_state{$client_id} = $pixel eq 'on' ? 1 : 0;
+          my $new_value = $pixel eq 'on' ? 1 : 0;
+          print STDERR $new_value;
+          $host_state{$client_id} = $new_value;
           make_host_list() if $new_host;
       }
       $req->respond({ content => ['text/html', 'Thanks' ]});
@@ -79,12 +97,13 @@ EOT
    '/static' => sub { _serve_static(@_) },
    '' => sub {
        my ($httpd, $req) = @_;
-       warn "Unknown path!! " . $req->url;
-       $req->respond({content => ['text/html', "Unknown address: " . $req->url]});
+       my $url = $req->url;
+       warn "Unknown path!! $url" unless $url =~ m/favicon\.ico/;
+       return $req->respond([404, 'Not Found', {}, '']);
    },
 );
 
-warn "Starting ...\n";
+print "Starting up on http://$ip:$port\n";
 $httpd->run;
 exit;
 
