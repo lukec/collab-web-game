@@ -20,7 +20,7 @@ EOT
 
 sub to_html {
     my $self = shift;
-    my $body = '<table class="pixels">';
+    my $body = '<table class="pixels" width="100%" height="90%">';
     my $side = $self->canvas_size();
     my $hosts = [ @{$self->hosts} ];
 
@@ -28,8 +28,9 @@ sub to_html {
         return 'Nobody connected yet!';
     }
 
+    my $cell_size = int(100 / $side);
     for my $x (1 .. $side) {
-        $body .= '<tr>';
+        $body .= qq{<tr style="height:$cell_size%">};
         for my $y (1 .. $side) {
             my $host = shift @$hosts;
             my $class = 'yellow';
@@ -37,7 +38,7 @@ sub to_html {
                 my $host_state = $self->state->by_host($host);
                 $class = $host_state->{pixel} ? 'white' : 'black';
             }
-            $body .= qq{<td class="$class"></td>};
+            $body .= qq{<td class="$class" style="width:$cell_size%"></td>};
         }
         $body .= "</tr>";
     }
