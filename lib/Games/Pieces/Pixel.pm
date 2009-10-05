@@ -21,29 +21,33 @@ EOT
 sub to_html {
     my $self = shift;
     my $body = '<table class="pixels" width="100%" height="90%">';
-    my $side = $self->canvas_size();
     my $hosts = [ @{$self->hosts} ];
 
     if (@$hosts == 0) {
         return 'Nobody connected yet!';
     }
 
+    my $side = $self->canvas_size();
     my $cell_size = int(100 / $side);
     for my $x (1 .. $side) {
         $body .= qq{<tr style="height:$cell_size%">};
         for my $y (1 .. $side) {
             my $host = shift @$hosts;
-            my $class = 'yellow';
-            if ($host) {
-                my $host_state = $self->state->by_host($host);
-                $class = $host_state->{pixel} ? 'white' : 'black';
-            }
-            $body .= qq{<td class="$class" style="width:$cell_size%"></td>};
+            my $cell_html = q{class="yellow"};
+            $cell_html = $self->_cell_html_for_host($host) if $host;
+            $body .= qq{<td $cell_html style="width:$cell_size%"></td>};
         }
         $body .= "</tr>";
     }
     $body .= "</table>";
     return $body;
+}
+
+sub _cell_html_for_host {
+    my $self = shift;
+    my $host = shift;
+    my $host_state = $self->state->by_host($host);
+    return q{class="} . ($host_state->{pixel} ? 'white' : 'black') . q{"};
 }
 
 sub canvas_size {
@@ -59,7 +63,7 @@ sub canvas_size {
 
 sub host_list_size {
     my $self = shift;
-    return $self->canvas_size ^ 2;
+    return $self->canvas_size * $self->canvas_size;
 }
 
 sub _validate_update {
