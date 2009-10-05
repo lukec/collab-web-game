@@ -96,13 +96,19 @@ sub html_header {
     my $js_method = $who . '_js_uri';
     my $css_method = $who . '_css_uri';
     my $js_uri = $self->$js_method;
+    my $js = join "\n", 
+        map { qq{<script type="text/javascript" src="$_"></script>} }
+            @{ ref($js_uri) eq 'ARRAY' ? $js_uri : [$js_uri] };
     my $css_uri = $self->$css_method;
+    my $css = join "\n", 
+        map { qq{<link rel="stylesheet" type="text/css" href="$_" />} }
+            @{ ref($css_uri) eq 'ARRAY' ? $css_uri : [$css_uri] };
     return <<eot;
 <html>
   <head>
     <script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>
-    <script type="text/javascript" src="$js_uri"></script>
-    <link rel="stylesheet" type="text/css" href="$css_uri" />
+    $js
+    $css
   </head>
   <body>
 eot
