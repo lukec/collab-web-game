@@ -1,0 +1,11 @@
+This is a collaborative web game for groups of people.
+
+One person runs the web server on a machine connected to a projector, so everyone can see the game board.
+
+  > ./bin/run-server --game pixel
+
+They then point their web interface at the /show URL.
+
+The other players connect to the Host & port displayed on the screen, and then interact with the page.
+
+The player's state is stored on the server and displayed. The players try to collectively produce something non-random.
