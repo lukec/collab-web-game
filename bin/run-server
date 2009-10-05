@@ -9,7 +9,9 @@ use Games::Pieces::Factory;
 my $ip = find_my_ip() || 'localhost';
 my $port = 9090;
 my $debug = 0;
-my $game_name = 'pixel';
+#my $game_name = 'pixel';
+#my $game_name = 'word';
+my $game_name = 'colour';
 
 GetOptions(
     'ip=s' => \$ip,
