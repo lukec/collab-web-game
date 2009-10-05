@@ -11,7 +11,7 @@ sub player_html {
     <center>
         <h1>Word Game</h1>
         Choose your word, but you only get 1! (no spaces)<br />
-        <input type="text" id="my_word" length="12" />
+        <p><input type="text" id="my_word" length="12" /></p>
     </center>
 EOT
 }
@@ -31,7 +31,10 @@ sub to_html {
         push @words, $word;
     }
     my $sentence = join ' ', @words;
-    return $sentence;
+    my $content = q{<p>Our sentence so far:</p>}
+                . q{<p id="our_sentence">} . ucfirst($sentence) . q{.</p>};
+
+    return $content;
 }
 
 sub _validate_update {
