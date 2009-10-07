@@ -38,7 +38,7 @@ sub _build_httpd {
           my $host = $self->host;
           my $port = $self->port;
           my $content = <<EOT;
-    <h1 class="big">Connect to http://$host:$port</h1>
+    <h1 class="connect">Connect to http://$host:$port</h1>
     <div id="game_canvas">
         $body
     </div>
@@ -58,11 +58,6 @@ EOT
        '/game/update' => sub {
           my ($httpd, $req) = @_;
           $httpd->stop_request;
-
-          if ($self->debug) {
-              use Data::Dumper;
-              warn Dumper {$req->vars};
-          }
 
           $self->handle_update( { $req->vars } );
           $req->respond({ content => ['text/html', 'Thanks' ]});
@@ -98,6 +93,20 @@ sub html_header {
     my $self = shift;
     my $who  = shift or die "who is mandatory!";
 
+    my $head = $self->html_head($who);
+    return <<eot;
+<html>
+  <head>
+    $head
+  </head>
+  <body>
+eot
+}
+
+sub html_head {
+    my $self = shift;
+    my $who = shift;
+
     no strict 'refs';
     my $js_method = $who . '_js_uri';
     my $css_method = $who . '_css_uri';
@@ -109,15 +118,11 @@ sub html_header {
     my $css = join "\n", 
         map { qq{<link rel="stylesheet" type="text/css" href="$_" />} }
             @{ ref($css_uri) eq 'ARRAY' ? $css_uri : [$css_uri] };
-    return <<eot;
-<html>
-  <head>
+    return <<EOT;
     <script type="text/javascript" src="http://jqueryui.com/latest/jquery-1.3.2.js"></script>
     $js
     $css
-  </head>
-  <body>
-eot
+EOT
 }
 
 sub _build_html_footer {

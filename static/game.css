@@ -24,6 +24,12 @@
     background: yellow;
 }
 
+.connect {
+    font-family: 'Courier';
+    font-size: 400%;
+    border: 2px;
+}
+
 .big {
     font-size: 240%;
 }
@@ -35,4 +41,20 @@
     font-size: 240%;
 }
 
-#slider { margin: 10px; }
+.bigtext {
+    font-size: 240%;
+}
+
+#slider { 
+    margin: 10px; 
+    height: 300px;
+}
+
+.adminslider {
+    float: left;
+}
+
+.slider_value {
+    font-size: 340%;
+    padding: 15px;
+}
