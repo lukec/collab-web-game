@@ -20,7 +20,7 @@ EOT
 
 sub to_html {
     my $self = shift;
-    my $body = '<table class="pixels" width="100%" height="90%">';
+    my $body = '<table class="pixels" width="100%" height="85%">';
     my $hosts = [ @{$self->hosts} ];
 
     if (@$hosts == 0) {

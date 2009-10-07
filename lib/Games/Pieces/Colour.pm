@@ -45,7 +45,7 @@ sub _validate_update {
     my $self = shift;
     my ($key, $value) = @_;
     return undef unless $key eq 'colour';
-    return undef unless $value =~ m/^#\w{6}$/;
+    return undef unless $value =~ m/^#?\w{6}$/;
     return $value;
 }
 

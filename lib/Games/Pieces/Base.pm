@@ -35,9 +35,11 @@ sub handle_update {
 
     if ($client_id) {
         my $new_host = $self->state->host_exists($client_id) ? 0 : 1;
+        warn "New host $client_id" if $new_host and $self->debug;
 
         for my $key (keys %$req_params) {
             my $value = $req_params->{$key};
+            warn "Validating $key: '$value'\n" if $self->debug;
             my $new_value = $self->_validate_update( $key => $value );
             next unless defined $new_value;
 
@@ -67,4 +69,3 @@ sub shuffle_host_list {
 
 __PACKAGE__->meta->make_immutable;
 1;
-
