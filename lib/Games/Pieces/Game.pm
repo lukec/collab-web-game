@@ -119,7 +119,7 @@ sub html_head {
         map { qq{<link rel="stylesheet" type="text/css" href="$_" />} }
             @{ ref($css_uri) eq 'ARRAY' ? $css_uri : [$css_uri] };
     return <<EOT;
-    <script type="text/javascript" src="http://jqueryui.com/latest/jquery-1.3.2.js"></script>
+    <script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>
     $js
     $css
 EOT
@@ -142,5 +142,19 @@ sub _respond {
                   . $opts{content} . $self->html_footer;
     return $req->respond({ content => ['text/html', $content ]});
 }
+
+=for comment
+
+around '_validate_update' => sub {
+    my $orig = shift;
+    my $self = shift;
+    my ($key, $value) = @_;
+    warn "Validating $key: '$value'\n" if $self->debug;
+
+    return $orig->($self, $key, $value);
+};
+
+
+=cut
 
 1;

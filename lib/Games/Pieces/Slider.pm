@@ -74,7 +74,6 @@ sub _calc_stats {
 sub _validate_update {
     my $self = shift;
     my ($key, $value) = @_;
-    warn "Validating $key: '$value'\n" if $self->debug;
     return undef unless $key eq 'value';
     return undef unless $value =~ m/^\d+$/;
     return undef if $value > 100;
