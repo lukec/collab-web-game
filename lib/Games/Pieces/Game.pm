@@ -3,6 +3,7 @@ use Moose::Role;
 use AnyEvent::HTTPD;
 use namespace::clean -except => 'meta';
 
+has 'debug' => (is => 'ro', isa => 'Bool', default => sub {0});
 has 'httpd' => (is => 'ro', isa => 'AnyEvent::HTTPD', lazy_build => 1,
                 handles => ['run']);
 
@@ -58,6 +59,11 @@ EOT
           my ($httpd, $req) = @_;
           $httpd->stop_request;
 
+          if ($self->debug) {
+              use Data::Dumper;
+              warn Dumper {$req->vars};
+          }
+
           $self->handle_update( { $req->vars } );
           $req->respond({ content => ['text/html', 'Thanks' ]});
        },
@@ -106,7 +112,7 @@ sub html_header {
     return <<eot;
 <html>
   <head>
-    <script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="http://jqueryui.com/latest/jquery-1.3.2.js"></script>
     $js
     $css
   </head>

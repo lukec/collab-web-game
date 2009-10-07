@@ -8,10 +8,11 @@ use Games::Pieces::Factory;
 
 my $ip = find_my_ip() || 'localhost';
 my $port = 9090;
-my $debug = 0;
+my $debug = 1;
 #my $game_name = 'pixel';
 #my $game_name = 'word';
-my $game_name = 'colour';
+#my $game_name = 'colour';
+my $game_name = 'slider';
 
 GetOptions(
     'ip=s' => \$ip,
@@ -31,6 +32,7 @@ EOT
 my %game_opts = (
     port => $port,
     host => $ip,
+    debug => $debug,
 );
 my $game = Games::Pieces::Factory->new(
     game_name => $game_name, 
