@@ -40,14 +40,20 @@ my $game = Games::Pieces::Factory->new(
 )->game;
 
 
-print "Starting up on http://$ip:$port\n";
+print "Players use:          http://$ip:$port\n";
+print "Main display is at:   http://$ip:$port/show\n";
 $game->run;
 exit;
 
 
 
 sub find_my_ip {
-    my $ip = qx(ifconfig|grep 'inet ' | grep -v 127.0.0.1| grep -v 192.168. | awk '{print \$2}');
+    my @ips = grep { !m/\Q127.0.0.1/ }
+              qx(ifconfig|grep 'inet ' | awk '{print \$2}');
+
+    use Data::Dumper;
+    warn Dumper \@ips;
+    my $ip = shift @ips;
     chomp $ip;
     return $ip;
 }

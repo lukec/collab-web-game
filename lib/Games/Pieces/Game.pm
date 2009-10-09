@@ -11,6 +11,7 @@ requires 'player_js_uri';
 requires 'player_css_uri';
 requires 'admin_js_uri';
 requires 'admin_css_uri';
+requires 'standby_html';
 
 has 'html_footer' => (is => 'ro', isa => 'Str', lazy_build => 1);
 
@@ -34,7 +35,7 @@ sub _build_httpd {
           my ($httpd, $req) = @_;
           $httpd->stop_request;
 
-          my $body = $self->to_html();
+          my $body = $self->to_html() || $self->standby_html;
           my $host = $self->host;
           my $port = $self->port;
           my $content = <<EOT;
@@ -53,7 +54,7 @@ EOT
           my ($httpd, $req) = @_;
           $httpd->stop_request;
 
-          $req->respond({ content => ['text/html', $self->to_html ]});
+          $req->respond({ content => ['text/html', $self->to_html || $self->standby_html ]});
        },
        '/game/update' => sub {
           my ($httpd, $req) = @_;

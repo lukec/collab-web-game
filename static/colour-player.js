@@ -9,4 +9,5 @@ $(document).ready(function() {
         });
         $('#color').val(new_colour);
     });
+    $.farbtastic('#picker').setColor('#0a22ff');
 });

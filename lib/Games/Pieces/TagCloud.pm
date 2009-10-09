@@ -9,10 +9,7 @@ extends 'Games::Pieces::Word';
 sub to_html {
     my $self = shift;
     my $hosts = [ @{$self->hosts} ];
-
-    if (@$hosts == 0) {
-        return 'Nobody connected yet!';
-    }
+    return unless @$hosts;
 
     my %words;
     for my $host (@$hosts) {

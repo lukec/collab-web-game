@@ -40,9 +40,7 @@ sub to_html {
     my $self = shift;
 
     my $hosts = $self->hosts;
-    if (@$hosts == 0) {
-        return 'Nobody connected yet!';
-    }
+    return unless @$hosts;
 
     my @values = map { $self->state->by_host($_)->{value} } @$hosts;
     my %stats = _calc_stats(\@values);

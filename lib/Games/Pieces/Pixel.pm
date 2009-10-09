@@ -23,9 +23,7 @@ sub to_html {
     my $body = '<table class="pixels" width="100%" height="85%">';
     my $hosts = [ @{$self->hosts} ];
 
-    if (@$hosts == 0) {
-        return 'Nobody connected yet!';
-    }
+    return unless @$hosts;
 
     my $side = $self->canvas_size();
     my $cell_size = int(100 / $side);

@@ -28,6 +28,10 @@ sub host_list_size {
 
 sub _build_state { Games::Pieces::State->new }
 
+sub standby_html {
+    return '<div class="bigtext">Go here in your web browser!</div>';
+}
+
 sub handle_update {
     my $self = shift;
     my $req_params = shift;
