@@ -13,7 +13,7 @@ my $debug = 0;
 #my $game_name = 'word';
 #my $game_name = 'colour';
 #my $game_name = 'tagcloud';
-my $game_name = 'slider';
+my $game_name = 'question';
 
 GetOptions(
     'ip=s' => \$ip,
