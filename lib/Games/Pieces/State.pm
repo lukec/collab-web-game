@@ -18,10 +18,18 @@ sub clients {
     return [ keys %{ $self->_state } ];
 }
 
+sub clients_by_time {
+    my $self = shift;
+    my $clients = $self->clients;
+    my $s = $self->_state;
+    return [ sort { $s->{$b}{update_time} <=> $s->{$a}{update_time} }
+                @$clients ];
+}
+
 sub by_host {
     my $self = shift;
     my $host = shift;
-    return $self->_state->{ $host } || {};
+    return $self->_state->{$host}{data} || {};
 }
 
 sub host_exists {
@@ -40,7 +48,10 @@ sub update_host {
         %$existing_opts,
         %new_opts
     };
-    $self->_state->{ $host } = $new_opts;
+    $self->_state->{ $host } = {
+        data => $new_opts,
+        update_time => time,
+    };
 }
 
 __PACKAGE__->meta->make_immutable;
