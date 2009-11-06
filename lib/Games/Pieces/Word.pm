@@ -7,12 +7,27 @@ extends 'Games::Pieces::Base';
 sub player_html {
     my $self = shift;
 
-    return <<EOT;
+    return <<'EOT';
     <center>
         <h1>Word Game</h1>
         Choose your word, but you only get 1! (no spaces)<br />
         <p><input type="text" id="my_word" length="12" /></p>
     </center>
+
+    <style>
+        #my_word { font-size: 240%; }
+    </style>
+
+    <script>
+$(document).ready(function() {
+    var my_id = Math.random();
+
+    $("#my_word").keyup( function(e) {
+        var my_word = $("#my_word").attr('value');
+        jQuery.get('/game/update', { word: my_word, id: my_id});
+    });
+});
+    </script>
 EOT
 }
 
@@ -27,10 +42,16 @@ sub to_html {
         my $word = $host_state->{word} || '____';
         push @words, $word;
     }
-    my $sentence = join ' ', @words;
-    my $content = q{<p>Our sentence so far:</p>}
-                . q{<p id="our_sentence">} . ucfirst($sentence) . q{.</p>};
-
+    my $sentence = ucfirst join ' ', @words;
+    my $content = <<EOT;
+    <style>
+.our_sentence { font-size: 240%; }
+    </style>
+    <div class="our_sentence">
+      <p>Our sentence so far:</p>
+      <div>$sentence</div>
+    </div>
+EOT
     return $content;
 }
 

@@ -11,25 +11,46 @@ has 'host' => (is => 'ro', isa => 'Str', required => 1);
 has 'state' => (is => 'ro', isa => 'Games::Pieces::State', lazy_build => 1);
 has 'hosts' => (is => 'rw', isa => 'ArrayRef[Str]', default => sub { [] });
 
-sub player_js_uri { 
-    my $self = shift;
-    (my $class = ref($self)) =~ s/.+::(.+)/lc($1)/e;
-    return "/static/$class-player.js";
-}
-
 sub player_css_uri { '/static/game.css' }
-sub admin_js_uri { '/static/game-admin.js' }
 sub admin_css_uri { '/static/game.css' }
 
-sub host_list_size {
-    my $self = shift;
-    return $self->state->client_count;
+sub standby_html {
+    return <<'EOT';
+<div class="bigtext">Go here in your web browser!</div>
+EOT
 }
 
-sub _build_state { Games::Pieces::State->new }
+sub admin_html {
+    my $self = shift;
+    my $body = $self->to_html || $self->standby_html;
+    my $host = $self->host;
+    my $port = $self->port;
+    my $content = <<EOT;
+    <h1 class="connect">Connect to http://$host:$port</h1>
+    <div id="game_canvas">
+        $body
+    </div>
 
-sub standby_html {
-    return '<div class="bigtext">Go here in your web browser!</div>';
+    <style>
+    .bigtext {
+        font-size: 240%;
+    }
+    .connect {
+        font-family: 'Courier';
+        font-size: 400%;
+        border: 2px;
+    }
+
+    </style>
+
+    <script>
+    \$(document).ready(function() {
+        setInterval(function() { 
+            \$("#game_canvas").load('/show/fragment');
+        }, 100);
+    });
+    </script>
+EOT
 }
 
 sub handle_update {
@@ -55,21 +76,25 @@ sub handle_update {
             );
         }
 
-        # Shuffle the board everytime someone new joins
-        $self->shuffle_host_list() if $new_host;
+        $self->new_host_joined() if $new_host;
     }
+}
+
+sub new_host_joined {
+    my $self = shift;
+
+    # Shuffle the board everytime someone new joins
+    $self->shuffle_host_list();
 }
 
 sub shuffle_host_list {
     my $self = shift;
-    my $side = $self->host_list_size;
-
     my @host_order = @{ $self->state->clients };
-    push @host_order, '' while @host_order < $side;
-
     @host_order = shuffle @host_order;
     $self->hosts(\@host_order);
 }
+
+sub _build_state { Games::Pieces::State->new }
 
 __PACKAGE__->meta->make_immutable;
 1;

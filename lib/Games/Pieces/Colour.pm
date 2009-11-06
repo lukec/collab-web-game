@@ -4,24 +4,10 @@ use namespace::clean -except => 'meta';
 
 extends 'Games::Pieces::Pixel';
 
-sub player_js_uri { 
-    [
-        '/static/colour-player.js',
-        '/static/farbtastic/farbtastic.js',
-    ]
-}
-
-sub player_css_uri { 
-    [
-        '/static/game.css',
-        '/static/farbtastic/farbtastic.css',
-    ]
-}
-
 sub player_html {
     my $self = shift;
 
-    return <<EOT;
+    return <<'EOT';
     <center>
         <h1>Colour Game</h1>
         Choose your color:<br />
@@ -30,6 +16,31 @@ sub player_html {
   <div class="form-item"><input type="text" id="color" name="color" value="#123456" /></div><div id="picker"></div>
 </form>
     </center>
+
+    <style>
+    </style>
+
+    <script>
+    $("head").append("<link>");
+    css = $("head").children(":last");
+    css.attr({
+      rel:  "stylesheet",
+      type: "text/css",
+      href: "/static/farbtastic/farbtastic.css"
+    });
+
+    $.getScript('/static/farbtastic/farbtastic.js', function () {
+        var my_id = Math.random();
+        $('#picker').farbtastic( function(new_colour) {
+            jQuery.get('/game/update', 
+                { colour: new_colour, id: my_id});
+            $('#color').css({ "background-color": new_colour });
+            $('#color').val(new_colour);
+        });
+        $.farbtastic('#picker').setColor('#0a22ff');
+    });
+    </script>
+
 EOT
 }
 
@@ -44,9 +55,8 @@ sub _cell_html_for_host {
 sub _validate_update {
     my $self = shift;
     my ($key, $value) = @_;
-    return undef unless $key eq 'colour';
-    return undef unless $value =~ m/^#?\w{6}$/;
-    return $value;
+    return $value if $key eq 'colour' and $value =~ m/^#?\w{6}$/;
+    return undef;
 }
 
 __PACKAGE__->meta->make_immutable;

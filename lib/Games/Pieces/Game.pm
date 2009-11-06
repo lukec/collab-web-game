@@ -7,13 +7,10 @@ has 'debug' => (is => 'ro', isa => 'Bool', default => sub {0});
 has 'httpd' => (is => 'ro', isa => 'AnyEvent::HTTPD', lazy_build => 1,
                 handles => ['run']);
 
-requires 'player_js_uri';
 requires 'player_css_uri';
-requires 'admin_js_uri';
 requires 'admin_css_uri';
 requires 'standby_html';
-
-has 'html_footer' => (is => 'ro', isa => 'Str', lazy_build => 1);
+requires 'admin_html';
 
 sub _build_httpd {
     my $self = shift;
@@ -25,36 +22,21 @@ sub _build_httpd {
           $httpd->stop_request;
 
           my $content = $self->player_html;
-          return $self->_respond(
-              req => $req, 
-              who => 'player',
-              content => $content,
-          );
+          return $self->_respond( req => $req, content => $content );
        },
        '/show' => sub {
           my ($httpd, $req) = @_;
           $httpd->stop_request;
 
-          my $body = $self->to_html() || $self->standby_html;
-          my $host = $self->host;
-          my $port = $self->port;
-          my $content = <<EOT;
-    <h1 class="connect">Connect to http://$host:$port</h1>
-    <div id="game_canvas">
-        $body
-    </div>
-EOT
-          return $self->_respond(
-              req => $req, 
-              who => 'admin',
-              content => $content,
-          );
+          my $content = $self->admin_html;
+          return $self->_respond( req => $req, content => $content );
        },
        '/show/fragment' => sub {
           my ($httpd, $req) = @_;
           $httpd->stop_request;
 
-          $req->respond({ content => ['text/html', $self->to_html || $self->standby_html ]});
+          $req->respond({ content => ['text/html', 
+                  $self->to_html || $self->standby_html ]});
        },
        '/game/update' => sub {
           my ($httpd, $req) = @_;
@@ -92,54 +74,23 @@ sub _serve_static {
 
 sub html_header {
     my $self = shift;
-    my $who  = shift or die "who is mandatory!";
-
-    my $head = $self->html_head($who);
     return <<eot;
 <html>
   <head>
-    $head
+    <script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>
   </head>
   <body>
 eot
 }
 
-sub html_head {
-    my $self = shift;
-    my $who = shift;
-
-    no strict 'refs';
-    my $js_method = $who . '_js_uri';
-    my $css_method = $who . '_css_uri';
-    my $js_uri = $self->$js_method;
-    my $js = join "\n", 
-        map { qq{<script type="text/javascript" src="$_"></script>} }
-            @{ ref($js_uri) eq 'ARRAY' ? $js_uri : [$js_uri] };
-    my $css_uri = $self->$css_method;
-    my $css = join "\n", 
-        map { qq{<link rel="stylesheet" type="text/css" href="$_" />} }
-            @{ ref($css_uri) eq 'ARRAY' ? $css_uri : [$css_uri] };
-    return <<EOT;
-    <script type="text/javascript" src="/static/jquery-1.3.2.min.js"></script>
-    $js
-    $css
-EOT
-}
-
-sub _build_html_footer {
-    my $self = shift;
-    return <<eot;
-  </body>
-</html>
-eot
-}
+sub html_footer { '</body></html>' }
 
 sub _respond {
     my $self = shift;
     my %opts = @_;
     my $req  = $opts{req};
 
-    my $content = $self->html_header($opts{who})
+    my $content = $self->html_header()
                   . $opts{content} . $self->html_footer;
     return $req->respond({ content => ['text/html', $content ]});
 }

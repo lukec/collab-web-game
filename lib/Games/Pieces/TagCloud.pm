@@ -5,7 +5,6 @@ use namespace::clean -except => 'meta';
 
 extends 'Games::Pieces::Word';
 
-
 sub to_html {
     my $self = shift;
     my $hosts = [ @{$self->hosts} ];
@@ -20,7 +19,8 @@ sub to_html {
     my $cloud = HTML::TagCloud->new;
     $cloud->add($_, '', $words{$_}) for keys %words;
 
-    return q{<div class="tagcloud">}
+    return '<style>.tagcloud { font-size: 200%; }</style>'
+        . q{<div class="tagcloud">}
         . $cloud->html_and_css(8)
         . q{</div>};
 }

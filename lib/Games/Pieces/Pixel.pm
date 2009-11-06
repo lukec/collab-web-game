@@ -1,26 +1,70 @@
 package Games::Pieces::Pixel;
 use Moose;
+use Algorithm::Numerical::Shuffle qw/shuffle/;
 use namespace::clean -except => 'meta';
 
 extends 'Games::Pieces::Base';
 
-sub player_js_uri { '/static/pixel-player.js' }
-
 sub player_html {
     my $self = shift;
 
-    return <<EOT;
+    return <<'EOT';
     <center>
         <h1>Pixel Game</h1>
         Choose your color:<br />
-        <div id="gameboard"></div>
+        <div id="gameboard" class="yellow"></div>
     </center>
+
+    <style>
+#gameboard {
+    border: 3px black solid;
+    height: 400px;
+    width: 400px;
+}
+.black { background: black; }
+.white { background: white; }
+.yellow { background: yellow; }
+    </style>
+
+    <script>
+    $(document).ready(function() {
+        var my_id = Math.random();
+
+        $("#gameboard").click( function() {
+            $(this).removeClass('yellow');
+            if ($(this).hasClass('black')) {
+                $(this).removeClass('black');
+                $(this).addClass('white');
+                jQuery.get('/game/update', { pixel: "on", id: my_id});
+            }
+            else {
+                $(this).removeClass('white');
+                $(this).addClass('black');
+                jQuery.get('/game/update', { pixel: "off", id: my_id});
+            }
+        });
+    });
+    </script>
 EOT
 }
 
 sub to_html {
     my $self = shift;
-    my $body = '<table class="pixels" width="100%" height="85%">';
+    my $body = <<EOT;
+    <style>
+.pixels {
+    border: 2px black solid;
+    width: 100%
+    height: 100%
+}
+.pixels td { border: 1px; }
+.black { background: black; }
+.white { background: white; }
+.yellow { background: yellow; }
+
+    </style>
+EOT
+    $body .= '<table class="pixels" width="100%" height="85%">';
     my $hosts = [ @{$self->hosts} ];
 
     return unless @$hosts;
@@ -59,10 +103,16 @@ sub canvas_size {
     return $i;
 }
 
-sub host_list_size {
+# Make sure the host list includes some undefs 
+override 'shuffle_host_list' => sub {
     my $self = shift;
-    return $self->canvas_size * $self->canvas_size;
-}
+
+    my $side = $self->canvas_size * $self->canvas_size;
+    my @host_order = @{ $self->state->clients };
+    push @host_order, '' while @host_order < $side;
+    @host_order = shuffle @host_order;
+    $self->hosts(\@host_order);
+};
 
 sub _validate_update {
     my $self = shift;
