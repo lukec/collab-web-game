@@ -19,6 +19,8 @@ use URI::Escape qw/uri_escape_utf8/;
 use List::Util qw/sum/;
 use Coro::Debug;
 
+my $num_users = shift || 8*8;
+
 my $UNPARSEABLE_CRUFT = "throw 1; < don't be evil' >";
 
 $AnyEvent::HTTP::MAX_PER_HOST = $AnyEvent::HTTP::MAX_PERSISTENT_PER_HOST = 9999;
@@ -60,7 +62,7 @@ sub update_the_game {
             "$outstanding requests. ($failed failed)\n";
     };
 
-    for my $user (1 .. 500) {
+    for my $user (1 .. $num_users) {
         $phase->begin;
         run_for_user $user, "fetcher for $user", sub {
             scope_guard { $phase->end if $phase };
