@@ -33,13 +33,11 @@ sub player_html {
         $("#gameboard").click( function() {
             $(this).removeClass('yellow');
             if ($(this).hasClass('black')) {
-                $(this).removeClass('black');
-                $(this).addClass('white');
+                $(this).removeClass('black').addClass('white');
                 jQuery.get('/game/update', { pixel: "on", id: my_id});
             }
             else {
-                $(this).removeClass('white');
-                $(this).addClass('black');
+                $(this).removeClass('white').addClass('black');
                 jQuery.get('/game/update', { pixel: "off", id: my_id});
             }
         });
