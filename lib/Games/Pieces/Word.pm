@@ -49,7 +49,7 @@ sub to_html {
     </style>
     <div class="our_sentence">
       <p>Our sentence so far:</p>
-      <div>$sentence</div>
+      <div>$sentence.</div>
     </div>
 EOT
     return $content;
