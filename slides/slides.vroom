@@ -1,0 +1,239 @@
+---- config
+title: Collaborative Web-Based Zeitgeist Games
+indent: 5
+height: 18
+width: 69
+skip: 0
+
+# The following options are for Gvim usage.
+# vim: gvim
+# fuopt: maxhorz,maxvert
+# guioptions: egmLtT
+# guicursor: a:blinkon0-ver25-Cursor
+# guifont: Bitstream_Vera_Sans_Mono:h18
+
+---- center
+== Collaborative Web Games
+
+by Luke Closs
+twitter.com/lukec
+BazCamp 2009
+
+----
+== Inspiration
+
+* SHHH #2
++* Build a game to play that night.
++* Players use their browsers
+  (ubiquitous)
++* No or little instruction
++* Measure the Zeitgeist
+---- center
+Lets Play Some Games!!
+---- perl,i4
+use Games::Pieces::GameServer;
+Games::Pieces::GameServer->new(
+    game_name => 'pixel',
+)->run;
+----
+== What just happened?
++* Any guesses?
++* Simplest possible game
++* Players control 1 bit (on/off)
++* Chaotic but settles with the group
++* Emergent Group Behavour
+----
+== Lets look at some code!
+
++3 parts to this:
++* Player Display
++* Player Updates
++* Main Display
+----
+== Player Display
++* Show player controls
++* Send player actions
+---- html
+    <center>
+        <h1>Pixel Game</h1>
+        Choose your color:<br />
+        <div id="gameboard" class="yellow"></div>
+    </center>
+---- javascript
+var my_id = Math.random();
+
+$("#gameboard").click( function() {
+    $(this).removeClass('yellow');
+    if ($(this).hasClass('black')) {
+        $(this).removeClass('black').addClass('white');
+        jQuery.get('/game/update', { pixel: "on", id: my_id});
+    }
+    else {
+        $(this).removeClass('white').addClass('black');
+        jQuery.get('/game/update', { pixel: "off", id: my_id});
+    }
+});
+----
+== Player Updates
++* HTTP Request
++* Validates player action
++* Updates game state
+---- javascript
+    jQuery.get('/game/update', { pixel: "off", id: my_id});
+---- perl
+   '/game/update' => sub {
+      my ($httpd, $req) = @_;
+      $httpd->stop_request;
+
+      $self->handle_update( { $req->vars } );
+      $req->respond({ content => ['text/html', 'Thanks' ]});
+   },
+---- perl
+sub _validate_update {
+    my $self = shift;
+    my ($key, $value) = @_;
+    return undef unless $key eq 'pixel';
+    return $value eq 'on' ? 1 : 0;
+}
+---- perl
+for my $key (keys %$req_params) {
+    my $value = $req_params->{$key};
+    my $new_value = $self->_validate_update( $key => $value );
+    next unless defined $new_value;
+
+    $self->state->update_host( $client_id => ($key => $new_value) );
+}
+----
+== Main Display
++* Poll server for game state
+  (Every 100ms)
++* Display game state as HTML
+---- html
+<h1 class="connect">Connect to http://$host:$port</h1>
+<div id="game_canvas">
+    <div class="bigtext">Go here in your web browser!</div>
+</div>
+---- javascript
+$(document).ready(function() {
+    setInterval(function() { 
+        $("#game_canvas").load('/show/fragment');
+    }, 100);
+});
+---- perl
+'/show/fragment' => sub {
+    my ($httpd, $req) = @_;
+    $httpd->stop_request;
+
+    $req->respond(
+        { content => ['text/html', 
+                      $self->to_html || $self->standby_html
+                     ]
+        }
+    );
+},
+---- perl
+my $side = $self->canvas_size();
+my $cell_size = int(100 / $side);
+for my $x (1 .. $side) {
+    $body .= qq{<tr style="height:$cell_size%">};
+    for my $y (1 .. $side) {
+        my $host = shift @$hosts;
+        my $cell_html = q{class="yellow"};
+        $cell_html = $self->_cell_html_for_host($host) if $host;
+        $body .= qq{<td $cell_html style="width:$cell_size%"></td>};
+    }
+    $body .= "</tr>";
+}
+$body .= "</table>";
+return $body;
+---- center
+Game #2 - Word Game
+---- perl,i4
+use Games::Pieces::GameServer;
+Games::Pieces::GameServer->new(
+    game_name => 'word',
+)->run;
+----
+== Word Game
++* Players control a word
++* What do we have to say?
++* How did it change?
+---- center
+Game #3 - Tag Cloud Game
++* We can learn about our group
+---- perl,i4
+use Games::Pieces::GameServer;
+Games::Pieces::GameServer->new(
+    game_name => 'tagcloud',
+)->run;
+----
+== Tag Cloud Game
++* Could be useful to get feedback
++* Project on the wall during a talk?
+---- center
+Game #4 - Colour Game
++* Emotional answers?
+---- perl,i4
+use Games::Pieces::GameServer;
+Games::Pieces::GameServer->new(
+    game_name => 'colour',
+)->run;
+----
+== Colour Game
++* Another angle on the zeitgest
+----
+== Technology
++* Post Modern Perl
++  (Moose, AnyEvent::HTTPD)
++    * Single threaded event-driven HTTP backend
++* jQuery
++* HTTP
+----
+== Development
++* Prototype at SHHH #2
+  (Single Perl script)
++* Rewrote using Moose
++* Each game in it's own package
++* Load Testing
+----
+== THE-HAMMER.pl
++* Load testing tool stolen from $work
++* Many simultaneous connections
++* Load up the macbook:
++** THE-HAMMER.pl <-- driving traffic
++** Games::Pieces::GameServer <-- Handling user updates
++** Games::Pieces::GameServer <-- Serving game HTML
++** Firefox <-- Re-displaying every 100ms
+---- perl
+if (fork()) {
+    use Games::Pieces::GameServer;
+    Games::Pieces::GameServer->new(
+        game_name => 'colour',
+    )->run;
+}
+else {
+    system("../bin/THE-HAMMER.pl 64");
+}
+---- perl
+if (fork()) {
+    use Games::Pieces::GameServer;
+    Games::Pieces::GameServer->new(
+        game_name => 'colour',
+    )->run;
+}
+else {
+    system("../bin/THE-HAMMER.pl 625");
+}
+----
+== Group Dynamics
++* Learn from peers
++* Identify your piece
++* Collaborate to build something larger
+----
+== Future
++* Group Q&A
++* Question submission & voting
++* Musical games
++* Group Battle Games
+---- center
+THE END
