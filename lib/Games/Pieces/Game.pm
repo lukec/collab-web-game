@@ -1,6 +1,7 @@
 package Games::Pieces::Game;
 use Moose::Role;
 use AnyEvent::HTTPD;
+use FindBin;
 use namespace::clean -except => 'meta';
 
 has 'debug' => (is => 'ro', isa => 'Bool', default => sub {0});
@@ -62,7 +63,7 @@ sub _serve_static {
 
     my $url = $req->url;
     $url =~ s#.+/(.+)#$1#;
-    my $filename = "static/$url";
+    my $filename = "$FindBin::Bin/../static/$url";
     die "Can't find $filename!" unless -e $filename;
     open(my $fh, $filename) or $req->respond (
         [404, 'not found', { 'Content-Type' => 'text/plain' }, 'not found']
