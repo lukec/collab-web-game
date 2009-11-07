@@ -3,58 +3,14 @@ use strict;
 use warnings;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
-use Getopt::Long;
-use Games::Pieces::Factory;
+use Games::Pieces::GameServer;
 
-my $ip = find_my_ip() || 'localhost';
-my $port = 9090;
-my $debug = 0;
 #my $game_name = 'pixel';
 #my $game_name = 'word';
 #my $game_name = 'colour';
 #my $game_name = 'tagcloud';
 my $game_name = 'question';
 
-GetOptions(
-    'ip=s' => \$ip,
-    'port=i' => \$port,
-    'd|debug' => \$debug,
-    'game=s' => \$game_name,
-) or die <<EOT;
-USAGE: $0 <options>
-
-Where <options> are:
-  --game=blah - name of the game to play
-  --ip=blah
-  --port=blah
-  --debug
-EOT
-
-my %game_opts = (
-    port => $port,
-    host => $ip,
-    debug => $debug,
-);
-my $game = Games::Pieces::Factory->new(
-    game_name => $game_name, 
-    game_opts => \%game_opts,
-)->game;
-
-
-print "Players use:          http://$ip:$port\n";
-print "Main display is at:   http://$ip:$port/show\n";
-$game->run;
-exit;
-
-
-
-sub find_my_ip {
-    my @ips = grep { !m/\Q127.0.0.1/ }
-              qx(ifconfig|grep 'inet ' | awk '{print \$2}');
-
-    use Data::Dumper;
-    warn Dumper \@ips;
-    my $ip = shift @ips;
-    chomp $ip;
-    return $ip;
-}
+Games::Pieces::GameServer->new(
+    game_name => $game_name,
+)->run;
