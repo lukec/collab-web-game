@@ -1,12 +1,19 @@
 ---- config
 title: Collaborative Web-Based Zeitgeist Games
 indent: 5
-height: 20
-width: 74
+height: 18
+width: 69
 skip: 0
 
+# The following options are for Gvim usage.
+# vim: gvim
+# fuopt: maxhorz,maxvert
+# guioptions: egmLtT
+# guicursor: a:blinkon0-ver25-Cursor
+# guifont: Bitstream_Vera_Sans_Mono:h18
+
 ---- center
-== Simple Collaborative Group Games
+== Collaborative Web Games
 
 by Luke Closs
 twitter.com/lukec
